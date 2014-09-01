@@ -18,4 +18,8 @@ func TestFS(t *testing.T){
 	t.Log("Body", string(body), err)
 	fi, err := s.Listdir("src/test")
 	t.Log("Listdir", fi, err)
+	err = s.Copy("testfile.txt", "testfile2.txt")
+	t.Log("Copy", err)
+	err = s.Remove("testfile2.txt")
+	t.Log("Remove", err)
 }
