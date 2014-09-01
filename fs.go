@@ -2,17 +2,17 @@ package davgo
 
 import (
 	"fmt"
-	"path/filepath"
+	"github.com/moovweb/gokogiri"
+	"io"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"path"
-	"io"
-	"io/ioutil"
-	"log"
+	"path/filepath"
 	"strconv"
 	"time"
-	"github.com/moovweb/gokogiri"
 )
 
 type Session struct {
@@ -33,38 +33,42 @@ type PropFindRes struct {
 	Fi []FileInfo
 }
 
-func (p *PropFindRes) Parse(b []byte) (err error){
+func (p *PropFindRes) Parse(b []byte) (err error) {
 	xml, err := gokogiri.ParseXml(b)
 	root := xml.Root()
 	root.RecursivelyRemoveNamespaces()
 	res, _ := root.Search("response")
-	for _, i := range res{
+	for _, i := range res {
 		var finfo FileInfo
 		href, _ := i.Search("href")
-		if href==nil { continue }
-		finfo.Href=href[0].Content()
+		if href == nil {
+			continue
+		}
+		finfo.Href = href[0].Content()
 		sz, _ := i.Search("propstat/prop/getcontentlength")
-		if sz==nil { continue }
+		if sz == nil {
+			continue
+		}
 		finfo.Size, _ = strconv.Atoi(sz[0].Content())
 		col, _ := i.Search("propstat/prop/resourcetype/collection")
-		if col!=nil {
-			finfo.IsDir=true
-		}else{
-			finfo.IsDir=false
+		if col != nil {
+			finfo.IsDir = true
+		} else {
+			finfo.IsDir = false
 		}
 		mt, _ := i.Search("propstat/prop/creationdate")
-		if mt!=nil {
+		if mt != nil {
 			finfo.Stamp, _ = time.Parse(time.RFC3339, mt[0].Content())
 		}
-		p.Fi=append(p.Fi, finfo)
+		p.Fi = append(p.Fi, finfo)
 	}
 	return
 }
 
 func (p *PropFindRes) ToRelative(base *url.URL) {
-	for i, m := range(p.Fi){
-		u,_ := filepath.Rel(base.String(), m.Href)
-		p.Fi[i].Href=u
+	for i, m := range p.Fi {
+		u, _ := filepath.Rel(base.String(), m.Href)
+		p.Fi[i].Href = u
 	}
 	return
 }
@@ -77,22 +81,22 @@ func NewSession(rooturl string) (s *Session, err error) {
 	return
 }
 
-func (s *Session) SetBasicAuth(user, pass string){
-	s.username=user
-	s.password=pass
+func (s *Session) SetBasicAuth(user, pass string) {
+	s.username = user
+	s.password = pass
 	return
 }
 
-func (s *Session) Chdir(name string) (err error){
-	nexturl,err := s.base.Parse(name)
-	if nexturl!=nil{
-		s.base=nexturl
+func (s *Session) Chdir(name string) (err error) {
+	nexturl, err := s.base.Parse(name)
+	if nexturl != nil {
+		s.base = nexturl
 	}
 	return
 }
 
-func (s *Session) Abs(name string) (res string){
-	u,_ := url.Parse(s.base.String())
+func (s *Session) Abs(name string) (res string) {
+	u, _ := url.Parse(s.base.String())
 	u.Path = path.Join(u.Path, name)
 	return u.String()
 }
@@ -102,8 +106,8 @@ func (s *Session) NewRequest(method, name string) (req *http.Request, err error)
 	if err != nil {
 		return
 	}
-	req.Host=s.base.Host
-	if s.username!=""{
+	req.Host = s.base.Host
+	if s.username != "" {
 		req.SetBasicAuth(s.username, s.password)
 	}
 	return
@@ -114,9 +118,9 @@ func (s *Session) DoRequest(req *http.Request) (res *http.Response, err error) {
 	return
 }
 
-func (s *Session) Res2Err(res *http.Response, success []int) (err error){
-	for _, v := range(success){
-		if v==res.StatusCode{
+func (s *Session) Res2Err(res *http.Response, success []int) (err error) {
+	for _, v := range success {
+		if v == res.StatusCode {
 			return nil
 		}
 	}
@@ -130,12 +134,12 @@ func (s *Session) Listdir(name string) (fi []FileInfo, err error) {
 	res, err := s.DoRequest(req)
 	resbody, err := ioutil.ReadAll(res.Body)
 	err = s.Res2Err(res, []int{200})
-	if err!=nil{
+	if err != nil {
 		p := PropFindRes{}
 		p.Parse(resbody)
 		p.ToRelative(s.base)
 		log.Println("listdir v1", p.Fi)
-		fi=p.Fi
+		fi = p.Fi
 	}
 	return
 }
@@ -147,10 +151,10 @@ func (s *Session) Stat(name string) (fi FileInfo, err error) {
 	res, err := s.DoRequest(req)
 	resbody, err := ioutil.ReadAll(res.Body)
 	err = s.Res2Err(res, []int{200})
-	if err!=nil{
+	if err != nil {
 		p := PropFindRes{}
 		p.Parse(resbody)
-		fi=p.Fi[0]
+		fi = p.Fi[0]
 	}
 	return
 }

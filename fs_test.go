@@ -1,11 +1,11 @@
 package davgo
 
 import (
-	"testing"
 	"io/ioutil"
+	"testing"
 )
 
-func TestFS(t *testing.T){
+func TestFS(t *testing.T) {
 	s, err := NewSession("http://localhost:8008/go")
 	t.Log("Session", s, err)
 	r, err := s.NewRequest("GET", "src/test")
