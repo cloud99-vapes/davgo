@@ -3,6 +3,8 @@ package davgo
 import (
 	"io/ioutil"
 	"testing"
+	_ "fmt"
+	_ "io"
 )
 
 func TestFS(t *testing.T) {
@@ -12,7 +14,7 @@ func TestFS(t *testing.T) {
 	t.Log("Request", r, err)
 	res, err := s.DoRequest(r)
 	t.Log("Response", res, err)
-	rd, err := s.NewReader("src/test")
+	rd, err := s.NewReader("src/test/test.go")
 	t.Log("Reader", rd, err)
 	body, err := ioutil.ReadAll(*rd)
 	t.Log("Body", string(body), err)
@@ -22,4 +24,6 @@ func TestFS(t *testing.T) {
 	t.Log("Copy", err)
 	err = s.Remove("testfile2.txt")
 	t.Log("Remove", err)
+	err = s.Put("testfile3.txt", []byte("test"))
+	t.Log("Put", err)
 }

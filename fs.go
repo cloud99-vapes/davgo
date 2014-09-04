@@ -1,11 +1,11 @@
 package davgo
 
 import (
+	"bytes"
 	"fmt"
 	"github.com/moovweb/gokogiri"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -138,7 +138,6 @@ func (s *Session) Listdir(name string) (fi []FileInfo, err error) {
 		p := PropFindRes{}
 		p.Parse(resbody)
 		p.ToRelative(s.base)
-		log.Println("listdir v1", p.Fi)
 		fi = p.Fi
 	}
 	return
@@ -220,6 +219,17 @@ func (s *Session) NewReader(name string) (rd *io.ReadCloser, err error) {
 	return &res.Body, err
 }
 
-func (s *Session) NewWriter(name string) (wr *io.Writer, err error) {
+func (s *Session) Put(name string, data []byte) (err error) {
+	req, err := http.NewRequest("PUT", s.Abs(name), bytes.NewBuffer(data))
+	if err != nil {
+		return
+	}
+	req.Host = s.base.Host
+	if s.username != "" {
+		req.SetBasicAuth(s.username, s.password)
+	}
+	req.ContentLength=int64(len(data))
+	res, err := s.DoRequest(req)
+	err = s.Res2Err(res, []int{201, 204})
 	return
 }
