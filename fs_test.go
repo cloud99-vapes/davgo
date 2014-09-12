@@ -1,10 +1,10 @@
 package davgo
 
 import (
-	"io/ioutil"
-	"testing"
 	_ "fmt"
 	_ "io"
+	"io/ioutil"
+	"testing"
 )
 
 func TestFS(t *testing.T) {

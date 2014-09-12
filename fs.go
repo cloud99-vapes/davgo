@@ -228,7 +228,22 @@ func (s *Session) Put(name string, data []byte) (err error) {
 	if s.username != "" {
 		req.SetBasicAuth(s.username, s.password)
 	}
-	req.ContentLength=int64(len(data))
+	req.ContentLength = int64(len(data))
+	res, err := s.DoRequest(req)
+	err = s.Res2Err(res, []int{201, 204})
+	return
+}
+
+func (s *Session) PutRange(name string, off int64, data []byte) (err error) {
+	req, err := http.NewRequest("PUT", s.Abs(name), bytes.NewBuffer(data))
+	dlen := int64(len(data))
+	rg := fmt.Sprintf("bytes %d-%d/%d", off, dlen+off, dlen+off+1)
+	req.Header.Add("Content-Range", rg)
+	req.Host = s.base.Host
+	if s.username != "" {
+		req.SetBasicAuth(s.username, s.password)
+	}
+	req.ContentLength = dlen
 	res, err := s.DoRequest(req)
 	err = s.Res2Err(res, []int{201, 204})
 	return
