@@ -102,7 +102,7 @@ func (s *Session) Abs(name string) (res string) {
 }
 
 func (s *Session) NewRequest(method, name string) (req *http.Request, err error) {
-	req, err = http.NewRequest(method, s.Abs(name), nil)
+	req, err = http.NewRequest(method, s.Abs(name)+"/", nil)
 	if err != nil {
 		return
 	}
@@ -133,7 +133,7 @@ func (s *Session) Listdir(name string) (fi []FileInfo, err error) {
 	req.Header.Add("translate", "f")
 	res, err := s.DoRequest(req)
 	resbody, err := ioutil.ReadAll(res.Body)
-	err = s.Res2Err(res, []int{200})
+	err = s.Res2Err(res, []int{200, 207, 301})
 	if err != nil {
 		p := PropFindRes{}
 		p.Parse(resbody)
