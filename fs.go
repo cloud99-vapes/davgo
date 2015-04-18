@@ -98,11 +98,15 @@ func (s *Session) Chdir(name string) (err error) {
 func (s *Session) Abs(name string) (res string) {
 	u, _ := url.Parse(s.base.String())
 	u.Path = path.Join(u.Path, name)
+	leng := len(name)
+	if name[leng-1:leng] == "/" {
+		return u.String() + "/"
+	}
 	return u.String()
 }
 
 func (s *Session) NewRequest(method, name string) (req *http.Request, err error) {
-	req, err = http.NewRequest(method, s.Abs(name)+"/", nil)
+	req, err = http.NewRequest(method, s.Abs(name), nil)
 	if err != nil {
 		return
 	}
@@ -133,7 +137,7 @@ func (s *Session) Listdir(name string) (fi []FileInfo, err error) {
 	req.Header.Add("translate", "f")
 	res, err := s.DoRequest(req)
 	resbody, err := ioutil.ReadAll(res.Body)
-	err = s.Res2Err(res, []int{200, 207, 301})
+	err = s.Res2Err(res, []int{200})
 	if err != nil {
 		p := PropFindRes{}
 		p.Parse(resbody)
