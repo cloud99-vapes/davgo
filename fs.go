@@ -6,6 +6,7 @@ import (
 	"github.com/moovweb/gokogiri"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -34,22 +35,30 @@ type PropFindRes struct {
 }
 
 func (p *PropFindRes) Parse(b []byte) (err error) {
+
 	xml, err := gokogiri.ParseXml(b)
 	root := xml.Root()
 	root.RecursivelyRemoveNamespaces()
+
 	res, _ := root.Search("response")
-	for _, i := range res {
+
+	for cnt, i := range res {
+
 		var finfo FileInfo
 		href, _ := i.Search("href")
 		if href == nil {
 			continue
 		}
+
 		finfo.Href = href[0].Content()
+
+		log.Println(finfo.Href)
+
 		sz, _ := i.Search("propstat/prop/getcontentlength")
-		if sz == nil {
-			continue
+		if sz != nil {
+			finfo.Size, _ = strconv.Atoi(sz[0].Content())
 		}
-		finfo.Size, _ = strconv.Atoi(sz[0].Content())
+
 		col, _ := i.Search("propstat/prop/resourcetype/collection")
 		if col != nil {
 			finfo.IsDir = true
