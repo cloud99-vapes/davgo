@@ -14,6 +14,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"github.com/cloud99-vapes/digest"
 )
 
 type Session struct {
@@ -82,9 +83,15 @@ func (p *PropFindRes) ToRelative(base *url.URL) {
 	return
 }
 
-func NewSession(rooturl string) (s *Session, err error) {
+func NewSession(rooturl, username, password string, digestauth bool) (s *Session, err error) {
 	jar, _ := cookiejar.New(nil)
 	cl := http.Client{Jar: jar}
+	if digestauth {
+		t := digest.NewTransport(username, password)
+		digestcl, _ := t.Client()
+		digestcl.Jar = jar
+		cl = *digestcl
+	}
 	u, _ := url.Parse(rooturl)
 	s = &Session{u, cl, "", ""}
 	return
