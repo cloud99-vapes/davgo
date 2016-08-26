@@ -42,7 +42,7 @@ func (p *PropFindRes) Parse(b []byte) (err error) {
 
 	res, _ := root.Search("response")
 
-	for cnt, i := range res {
+	for _, i := range res {
 
 		var finfo FileInfo
 		href, _ := i.Search("href")
