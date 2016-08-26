@@ -114,8 +114,8 @@ func (s *Session) Abs(name string) (res string) {
 	return u.String()
 }
 
-func (s *Session) NewRequest(method, name string) (req *http.Request, err error) {
-	req, err = http.NewRequest(method, s.Abs(name), nil)
+func (s *Session) NewRequest(method, name string, body io.Reader) (req *http.Request, err error) {
+	req, err = http.NewRequest(method, s.Abs(name), body)
 	if err != nil {
 		return
 	}
@@ -141,7 +141,7 @@ func (s *Session) Res2Err(res *http.Response, success []int) (err error) {
 }
 
 func (s *Session) Listdir(name string) (fi []FileInfo, err error) {
-	req, err := s.NewRequest("PROPFIND", name)
+	req, err := s.NewRequest("PROPFIND", name, nil)
 	req.Header.Add("depth", "1")
 	req.Header.Add("translate", "f")
 	res, err := s.DoRequest(req)
@@ -157,7 +157,7 @@ func (s *Session) Listdir(name string) (fi []FileInfo, err error) {
 }
 
 func (s *Session) Stat(name string) (fi FileInfo, err error) {
-	req, err := s.NewRequest("PROPFIND", name)
+	req, err := s.NewRequest("PROPFIND", name, nil)
 	req.Header.Add("depth", "0")
 	req.Header.Add("translate", "f")
 	res, err := s.DoRequest(req)
@@ -172,7 +172,7 @@ func (s *Session) Stat(name string) (fi FileInfo, err error) {
 }
 
 func (s *Session) Rename(name, dest string) (err error) {
-	req, err := s.NewRequest("MOVE", name)
+	req, err := s.NewRequest("MOVE", name, nil)
 	req.Header.Add("Destination", s.Abs(dest))
 	res, err := s.DoRequest(req)
 	_, err = ioutil.ReadAll(res.Body)
@@ -181,7 +181,7 @@ func (s *Session) Rename(name, dest string) (err error) {
 }
 
 func (s *Session) remove(name string, depth string) (err error) {
-	req, err := s.NewRequest("DELETE", name)
+	req, err := s.NewRequest("DELETE", name, nil)
 	req.Header.Add("Depth", depth)
 	res, err := s.DoRequest(req)
 	_, err = ioutil.ReadAll(res.Body)
@@ -190,7 +190,7 @@ func (s *Session) remove(name string, depth string) (err error) {
 }
 
 func (s *Session) Copy(name, dest string) (err error) {
-	req, err := s.NewRequest("COPY", name)
+	req, err := s.NewRequest("COPY", name, nil)
 	req.Header.Add("Destination", s.Abs(dest))
 	res, err := s.DoRequest(req)
 	_, err = ioutil.ReadAll(res.Body)
@@ -199,7 +199,7 @@ func (s *Session) Copy(name, dest string) (err error) {
 }
 
 func (s *Session) Mkdir(name string) (err error) {
-	req, err := s.NewRequest("MKCOL", name)
+	req, err := s.NewRequest("MKCOL", name, nil)
 	res, err := s.DoRequest(req)
 	_, err = ioutil.ReadAll(res.Body)
 	err = s.Res2Err(res, []int{201})
@@ -227,13 +227,13 @@ func (s *Session) UnLock(name, token string) (err error) {
 }
 
 func (s *Session) NewReader(name string) (rd *io.ReadCloser, err error) {
-	req, err := s.NewRequest("GET", name)
+	req, err := s.NewRequest("GET", name, nil)
 	res, err := s.DoRequest(req)
 	return &res.Body, err
 }
 
 func (s *Session) Put(name string, data []byte) (err error) {
-	req, err := http.NewRequest("PUT", s.Abs(name), bytes.NewBuffer(data))
+	req, err := s.NewRequest("PUT", name, bytes.NewBuffer(data))
 	if err != nil {
 		return
 	}
@@ -248,7 +248,7 @@ func (s *Session) Put(name string, data []byte) (err error) {
 }
 
 func (s *Session) PutRange(name string, off int64, data []byte) (err error) {
-	req, err := http.NewRequest("PUT", s.Abs(name), bytes.NewBuffer(data))
+	req, err := s.NewRequest("PUT", name, bytes.NewBuffer(data))
 	dlen := int64(len(data))
 	rg := fmt.Sprintf("bytes %d-%d/%d", off, dlen+off, dlen+off+1)
 	req.Header.Add("Content-Range", rg)
