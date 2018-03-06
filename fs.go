@@ -3,16 +3,13 @@ package davgo
 import (
 	"bytes"
 	"fmt"
-	"github.com/moovweb/gokogiri"
 	"io"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
 	"path"
 	"path/filepath"
-	"strconv"
 	"time"
 	"github.com/cloud99-vapes/digest"
 )
@@ -36,42 +33,6 @@ type PropFindRes struct {
 }
 
 func (p *PropFindRes) Parse(b []byte) (err error) {
-
-	xml, err := gokogiri.ParseXml(b)
-	root := xml.Root()
-	root.RecursivelyRemoveNamespaces()
-
-	res, _ := root.Search("response")
-
-	for _, i := range res {
-
-		var finfo FileInfo
-		href, _ := i.Search("href")
-		if href == nil {
-			continue
-		}
-
-		finfo.Href = href[0].Content()
-
-		log.Println(finfo.Href)
-
-		sz, _ := i.Search("propstat/prop/getcontentlength")
-		if sz != nil {
-			finfo.Size, _ = strconv.Atoi(sz[0].Content())
-		}
-
-		col, _ := i.Search("propstat/prop/resourcetype/collection")
-		if col != nil {
-			finfo.IsDir = true
-		} else {
-			finfo.IsDir = false
-		}
-		mt, _ := i.Search("propstat/prop/creationdate")
-		if mt != nil {
-			finfo.Stamp, _ = time.Parse(time.RFC3339, mt[0].Content())
-		}
-		p.Fi = append(p.Fi, finfo)
-	}
 	return
 }
 
